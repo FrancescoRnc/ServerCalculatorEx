@@ -117,12 +117,23 @@ namespace ServerCalculatorEx.Test
         }
 
         [Test]
-        public void TestClientServerExchangeData()
-        {
-            FakeEndPoint clientEndPoint = new FakeEndPoint("testerclient", 01);
-            FakeEndPoint serverEndPoint = new FakeEndPoint("testerserver", 00);
+        public void TestClientServerCheckCommandNotExpected()
+        {            
+            client.PrepareValuesToSend(9, 3.5f, 7f);
+            client.Step();
 
-            client.PrepareValuesToSend(0, 3.5f, 7f);
+            serverTransport.ClientEnqueue(clientTransport.ClientDequeue());
+            server.Step();
+
+            
+
+            Assert.That(() => clientTransport.ClientDequeue(), Throws.InstanceOf<FakeQueueEmpty>());
+        }
+
+        [Test]
+        public void TestAdditionCommandPacket()
+        {
+            client.PrepareValuesToSend(0, 5f, 7f);
             client.Step();
 
             serverTransport.ClientEnqueue(clientTransport.ClientDequeue());
@@ -131,7 +142,56 @@ namespace ServerCalculatorEx.Test
             clientTransport.ClientEnqueue(serverTransport.ClientDequeue());
             client.Step();
 
-            Assert.That(client.LastResultReceived, Is.EqualTo(10.5f));
+            Assert.AreEqual(client.LastResultReceived, 12.4f);
+        }
+
+        [Test]
+        public void TestSubtractionCommandPacket()
+        {
+            client.PrepareValuesToSend(1, 5f, 7);
+            client.Step();
+
+            serverTransport.ClientEnqueue(clientTransport.ClientDequeue());
+            server.Step();
+
+            clientTransport.ClientEnqueue(serverTransport.ClientDequeue());
+            client.Step();
+
+            Assert.AreEqual(client.LastResultReceived, -2f);
+            // If i want to calculate a number like 5.4 - 7 = -1.6,
+            // the result the server give is -1.599999,
+            // and i don't know how to fix it, 
+            // if i can manage any margin of error
+        }
+
+        [Test]
+        public void TestMultiplicationCommandPacket()
+        {
+            client.PrepareValuesToSend(2, 5.4f, 7f);
+            client.Step();
+
+            serverTransport.ClientEnqueue(clientTransport.ClientDequeue());
+            server.Step();
+
+            clientTransport.ClientEnqueue(serverTransport.ClientDequeue());
+            client.Step();
+
+            Assert.AreEqual(client.LastResultReceived, 37.8f);
+        }
+
+        [Test]
+        public void TestDivisionCommandPacket()
+        {
+            client.PrepareValuesToSend(3, 3.5f, 7f);
+            client.Step();
+
+            serverTransport.ClientEnqueue(clientTransport.ClientDequeue());
+            server.Step();
+
+            clientTransport.ClientEnqueue(serverTransport.ClientDequeue());
+            client.Step();
+            
+            Assert.AreEqual(client.LastResultReceived, 0.5f);
         }
     }
 }

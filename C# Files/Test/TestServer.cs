@@ -133,7 +133,7 @@ namespace ServerCalculatorEx.Test
         [Test]
         public void TestAdditionCommandPacket()
         {
-            client.PrepareValuesToSend(0, 5f, 7f);
+            client.PrepareValuesToSend(0, 5.4f, 7f);
             client.Step();
 
             serverTransport.ClientEnqueue(clientTransport.ClientDequeue());
@@ -141,14 +141,14 @@ namespace ServerCalculatorEx.Test
 
             clientTransport.ClientEnqueue(serverTransport.ClientDequeue());
             client.Step();
-
-            Assert.AreEqual(client.LastResultReceived, 12.4f);
+            
+            Assert.That(client.LastResultReceived, Is.EqualTo(12.4f).Within(0.0001f));
         }
 
         [Test]
         public void TestSubtractionCommandPacket()
         {
-            client.PrepareValuesToSend(1, 5f, 7);
+            client.PrepareValuesToSend(1, 5.4f, 7);
             client.Step();
 
             serverTransport.ClientEnqueue(clientTransport.ClientDequeue());
@@ -156,12 +156,8 @@ namespace ServerCalculatorEx.Test
 
             clientTransport.ClientEnqueue(serverTransport.ClientDequeue());
             client.Step();
-
-            Assert.AreEqual(client.LastResultReceived, -2f);
-            // If i want to calculate a number like 5.4 - 7 = -1.6,
-            // the result the server give is -1.599999,
-            // and i don't know how to fix it, 
-            // if i can manage any margin of error
+            
+            Assert.That(client.LastResultReceived, Is.EqualTo(-1.6f).Within(0.0001f));
         }
 
         [Test]
